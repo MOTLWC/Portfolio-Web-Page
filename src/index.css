@@ -1,3 +1,10 @@
 svg {
   background: darkcyan;
 }
+
+polygon {
+  fill:white;
+  stroke:black;
+  stroke-width:3px;
+  fill-rule:nonzero;
+}
