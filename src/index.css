@@ -8,3 +8,8 @@ polygon {
   stroke-width:2px;
   fill-rule:nonzero;
 }
+
+line {
+  stroke:rgb(0,0,0,0.5);
+  stroke-width: 2px;
+}
