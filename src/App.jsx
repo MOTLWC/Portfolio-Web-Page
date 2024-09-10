@@ -3,7 +3,7 @@ import './App.css'
 
 function App() {
 
-  const polygonRef = useRef(null);
+  const Gravity = 1
 
   const TestSVG = useRef(null);
 
@@ -14,6 +14,7 @@ function App() {
     this.x = x
     this.y = y
     this.connections = connections
+    this.velocity = { x: 0, y: 0 }
   }
 
   function Letter(points, svgRef) {
@@ -27,33 +28,64 @@ function App() {
       this.points.forEach((vertexStart) => {
         this.points.forEach((vertexEnd) => {
           if (vertexStart.connections.includes(vertexEnd.id)) {
-            console.log(vertexStart.connections, vertexEnd.id)
+            // console.log(vertexStart.connections, vertexEnd.id)
             this.connections.push(new Connection({ x: vertexStart.x, y: vertexStart.y }, { x: vertexEnd.x, y: vertexEnd.y }))
           }
         })
       })
-    }
-    this.render = () => {
       this.connections.forEach((connection) => {
-        //  Wipe Previous Render
-        this.svg.current.innerHtml("")
-
-        // Set the line's attributes
-        const newLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        newLine.setAttribute("x1", connection.start.x);
-        newLine.setAttribute("y1", connection.start.y);
-        newLine.setAttribute("x2", connection.end.x);
-        newLine.setAttribute("y2", connection.end.y);
-        newLine.setAttribute("stroke", "black");
-
-        // Append the new line to the SVG element
-        this.svg.current.appendChild(newLine);
+        this.svg.current.appendChild(connection.lineRef)
       })
     }
+
+    this.updateConnections = () => {
+      let i = 0
+      this.points.forEach((vertexStart) => {
+        this.points.forEach((vertexEnd) => {
+          if (vertexStart.connections.includes(vertexEnd.id)) {
+            // console.log(this.connections)
+            this.connections[i].start = { x: vertexStart.x, y: vertexStart.y }
+            this.connections[i].end = { x: vertexEnd.x, y: vertexEnd.y }
+            i++
+          }
+        })
+      })
+    }
+
+    this.render = () => {
+      this.updateConnections()
+
+      this.connections.forEach((connection) => {
+
+        // Set the line's attributes
+        const drawnLine = connection.lineRef
+        // console.log(drawnLine)
+        drawnLine.setAttribute("x1", connection.start.x);
+        drawnLine.setAttribute("y1", connection.start.y);
+        drawnLine.setAttribute("x2", connection.end.x);
+        drawnLine.setAttribute("y2", connection.end.y);
+        drawnLine.setAttribute("stroke", "black");
+      })
+    }
+
+    this.accelerate = () => {
+      this.points.forEach((point) => {
+        point.velocity.y += Gravity
+      })
+    }
+
+    this.updateVelocity = () => {
+      this.points.forEach((point) => {
+        point.x += point.velocity.x
+        point.y += point.velocity.y
+      })
+    }
+
   }
 
 
-  function Connection(start, end) {
+  function Connection(start, end, lineRef) {
+    this.lineRef = document.createElementNS("http://www.w3.org/2000/svg", "line")
     this.start = start
     this.end = end
     this.length = Math.sqrt((start.x - end.x) + (start.y - end.y))
@@ -92,11 +124,23 @@ function App() {
   ], TestSVG2, 20))
 
   useEffect(() => {
-    // testLetter.createConnections()
-    fOne.createConnections()
+    const fps = 1000 / 1;
 
-  }, [fOne])
+    if (fOne.connections.length === 0) fOne.createConnections()
 
+    const intervalId = setInterval(async () => {
+      if (fOne) {
+        fOne.accelerate();
+        fOne.updateVelocity();
+
+        //  Wipe Previous Render
+        // fOne.svg.current.innerHTML = "";
+        fOne.render();
+      }
+    }, fps);
+
+    return () => clearInterval(intervalId); // Clean up interval on component unmount
+  }, [fOne]);
 
   return (
     <>
