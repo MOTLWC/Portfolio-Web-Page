@@ -9,6 +9,13 @@ function App() {
 
   const TestSVG2 = useRef(null);
 
+  function Vertex(x, y, id, ...connections) {
+    this.id = id
+    this.x = x
+    this.y = y
+    this.connections = connections
+  }
+
   function Letter(points, svgRef, averageDistance) {
     // points should be an array of {x,y} coordinates 
     this.points = points
