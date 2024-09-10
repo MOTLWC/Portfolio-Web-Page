@@ -22,8 +22,12 @@ function App() {
     this.points = points
     this.connections = []
     this.svg = svgRef
+    this.svgWidth = 0
+    this.svgHeight = 0
 
     this.createConnections = () => {
+      this.svgWidth = this.svg.current.getAttribute("width")
+      this.svgHeight =  this.svg.current.getAttribute("height")
       // Creates connections based on the connections listed in the Vertex objects
       this.points.forEach((vertexStart) => {
         this.points.forEach((vertexEnd) => {
@@ -74,10 +78,13 @@ function App() {
       })
     }
 
-    this.updateVelocity = () => {
+    this.updatePosition = () => {
       this.points.forEach((point) => {
         point.x += point.velocity.x
         point.y += point.velocity.y
+        if (point.x > this.svgWidth) point.x = this.svgWidth
+        if (point.x < 0) point.x = 0
+        if (point.y > this.svgHeight) point.y = this.svgHeight
       })
     }
 
@@ -124,17 +131,14 @@ function App() {
   ], TestSVG2, 20))
 
   useEffect(() => {
-    const fps = 1000 / 1;
+    const fps = 1000 / 30;
 
     if (fOne.connections.length === 0) fOne.createConnections()
 
     const intervalId = setInterval(async () => {
       if (fOne) {
         fOne.accelerate();
-        fOne.updateVelocity();
-
-        //  Wipe Previous Render
-        // fOne.svg.current.innerHTML = "";
+        fOne.updatePosition();
         fOne.render();
       }
     }, fps);
