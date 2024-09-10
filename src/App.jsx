@@ -7,23 +7,23 @@ function App() {
 
   const TestSVG = useRef(null);
 
-  function vertex(x, y, connections) {
-    this.x = x
-  }
+  const TestSVG2 = useRef(null);
 
-  function Letter(points) {
+  function Letter(points, svgRef, averageDistance) {
     // points should be an array of {x,y} coordinates 
     this.points = points
     this.conections = []
+    this.svg = svgRef
+    this.averageDistance = averageDistance
 
     this.createConnections = () => {
       // gets nearest points in directions (hor, vert, diagonal) and creates a connection 
       this.points.forEach((point) => {
         this.points.forEach((adjacentPoint) => {
           if (
-            (((point.x === adjacentPoint.x + 25) || (point.x === adjacentPoint.x - 25)) && (point.y === adjacentPoint.y )) ||
-            (((point.y === adjacentPoint.y + 25) || (point.y === adjacentPoint.y - 25)) && (point.x === adjacentPoint.x )) ||
-            (((point.y === adjacentPoint.y + 25) || (point.y === adjacentPoint.y - 25)) && ((point.x === adjacentPoint.x + 25) || (point.x === adjacentPoint.x - 25)))
+            (((point.x === adjacentPoint.x + this.averageDistance) || (point.x === adjacentPoint.x - this.averageDistance)) && (point.y === adjacentPoint.y )) ||
+            (((point.y === adjacentPoint.y + this.averageDistance) || (point.y === adjacentPoint.y - this.averageDistance)) && (point.x === adjacentPoint.x )) ||
+            (((point.y === adjacentPoint.y + this.averageDistance) || (point.y === adjacentPoint.y - this.averageDistance)) && ((point.x === adjacentPoint.x + this.averageDistance) || (point.x === adjacentPoint.x - this.averageDistance)))
           ){
             console.log(point, adjacentPoint)
             this.conections.push(new Connection(point, adjacentPoint))
@@ -42,7 +42,7 @@ function App() {
         newLine.setAttribute("y2", connection.end.y)
         newLine.setAttribute("stroke", "black");
 
-        TestSVG.current.appendChild(newLine);
+        this.svg.current.appendChild(newLine);
       })
     }
   }
@@ -56,13 +56,23 @@ function App() {
 
   // Create Letters 
 
-  const [testLetter, setTestLetter] = useState(new Letter([{ x: 25, y: 25 }, { x: 50, y: 25 }, { x: 75, y: 25 }, { x: 25, y: 50 }, { x: 50, y: 50 }, { x: 75, y: 50 }, { x: 25, y: 75 }, { x: 50, y: 75 }, { x: 75, y: 75 }]))
+  const [testLetter, setTestLetter] = useState(new Letter([{ x: 25, y: 25 }, { x: 50, y: 25 }, { x: 75, y: 25 }, { x: 25, y: 50 }, { x: 50, y: 50 }, { x: 75, y: 50 }, { x: 25, y: 75 }, { x: 50, y: 75 }, { x: 75, y: 75 }], TestSVG, 25))
+
+  const [fOne, setFOne] = useState(new Letter([
+    {x: 20, y: 20}, {x: 30, y: 20}, {x: 40, y: 20}, {x: 50, y: 20}, {x: 60, y: 20}, {x: 70, y: 20}, {x: 80, y: 20},
+    {x: 80, y: 30}, {x: 80, y: 40}, {x: 70, y: 40}, {x: 60, y: 40}, {x: 50, y: 40}, {x: 40, y: 40}, {x: 40, y: 50}, 
+    {x: 40, y: 60}, {x: 40, y: 70}, {x: 40, y: 80}, {x: 50, y: 80}, {x: 60, y: 80}, {x: 60, y: 90}, {x: 60, y: 100}, 
+    {x: 50, y: 100}, {x: 40, y: 100}, {x: 40, y: 110}, {x: 40, y: 120}, {x: 40, y: 130}, {x: 40, y: 140}, {x: 40, y: 150}, 
+    {x: 40, y: 160}, {x: 40, y: 170}, {x: 40, y: 180}, {x: 30, y: 180}, {x: 20, y: 180}, {x: 20, y: 170}, {x: 20, y: 160}, 
+    {x: 20, y: 150}, {x: 20, y: 140}, {x: 20, y: 130}, {x: 20, y: 120}, {x: 20, y: 110}, {x: 20, y: 100}, {x: 20, y: 90}, 
+    {x: 20, y: 80}, {x: 20, y: 70}, {x: 20, y: 60}, {x: 20, y: 50}, {x: 20, y: 40}, {x: 20, y: 30}
+], TestSVG2, 20))
 
   useEffect(() => {
     testLetter.createConnections()
+    fOne.createConnections()
 
-
-  }, [testLetter])
+  }, [testLetter, fOne])
 
 
   return (
@@ -71,7 +81,7 @@ function App() {
         <h1>Felix McNeill Rutter</h1>
         <div id="TestSVGParent" className="SVGContainer">
           <svg width="100" height="200">
-            <polygon points="20,20 80,20 80,40 40,40 40,80 60,80 60,100 40,100 40,180 20,180" />
+          <polygon points="20,20 80,20 80,40 40,40 40,80 60,80 60,100 40,100 40,180 20,180" />
           </svg>
           <svg width="100" height="200">
             <polygon points="20,20 80,20 80,40 40,40" />
@@ -81,6 +91,8 @@ function App() {
           </svg>
           <svg ref={TestSVG} width={100} height={200}>
 
+          </svg>
+          <svg ref={TestSVG2} width="100" height="200">
           </svg>
         </div>
       </header>
