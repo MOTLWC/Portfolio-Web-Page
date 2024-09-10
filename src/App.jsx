@@ -3,7 +3,7 @@ import './App.css'
 
 function App() {
 
-  const Gravity = 1
+  const Gravity = 0.6
 
   const TestSVG = useRef(null);
 
@@ -27,13 +27,13 @@ function App() {
 
     this.createConnections = () => {
       this.svgWidth = this.svg.current.getAttribute("width")
-      this.svgHeight =  this.svg.current.getAttribute("height")
+      this.svgHeight = this.svg.current.getAttribute("height")
       // Creates connections based on the connections listed in the Vertex objects
       this.points.forEach((vertexStart) => {
         this.points.forEach((vertexEnd) => {
           if (vertexStart.connections.includes(vertexEnd.id)) {
             // console.log(vertexStart.connections, vertexEnd.id)
-            this.connections.push(new Connection({ x: vertexStart.x, y: vertexStart.y }, { x: vertexEnd.x, y: vertexEnd.y }))
+            this.connections.push(new Connection(vertexStart, vertexEnd))
           }
         })
       })
@@ -48,8 +48,10 @@ function App() {
         this.points.forEach((vertexEnd) => {
           if (vertexStart.connections.includes(vertexEnd.id)) {
             // console.log(this.connections)
-            this.connections[i].start = { x: vertexStart.x, y: vertexStart.y }
-            this.connections[i].end = { x: vertexEnd.x, y: vertexEnd.y }
+            this.connections[i].start.x = vertexStart.x
+            this.connections[i].end.x = vertexEnd.x
+            this.connections[i].start.y = vertexStart.y
+            this.connections[i].end.y = vertexEnd.y
             i++
           }
         })
@@ -78,13 +80,47 @@ function App() {
       })
     }
 
+    this.calculateForce = () => {
+      this.connections.forEach((connection) => {
+        const newLength = Math.sqrt(((connection.start.x - connection.end.x) * (connection.start.x - connection.end.x)) + ((connection.start.y - connection.end.y) * (connection.start.y - connection.end.y)))
+        const displacement = connection.length - newLength
+        const repulsionForce = displacement * connection.coefficient
+        // console.log(repulsionForce)
+        const unitX = (connection.start.x - connection.end.x) / newLength
+        const unitY = (connection.start.y - connection.end.y) / newLength
+        if (!repulsionForce) return
+        // console.log(unitX,unitY)
+
+        // Adding Resistance To avoid Oscillation
+        const damping = 0.1
+        connection.start.velocity.x *= (1 - damping);
+        connection.start.velocity.y *= (1 - damping);
+        connection.end.velocity.x *= (1 - damping);
+        connection.end.velocity.y *= (1 - damping);
+
+        connection.start.velocity.x -= repulsionForce * unitX
+        connection.end.velocity.x += repulsionForce * unitX
+        connection.start.velocity.y -= repulsionForce * unitY
+        connection.end.velocity.y += repulsionForce * unitY
+      })
+    }
+
     this.updatePosition = () => {
       this.points.forEach((point) => {
         point.x += point.velocity.x
         point.y += point.velocity.y
-        if (point.x > this.svgWidth) point.x = this.svgWidth
-        if (point.x < 0) point.x = 0
-        if (point.y > this.svgHeight) point.y = this.svgHeight
+        if (point.x > this.svgWidth) {
+          point.velocity.x = 0
+          point.x = this.svgWidth
+        }
+        if (point.x < 0) {
+          point.velocity.x = 0
+          point.x = 0
+        }
+        if (point.y > this.svgHeight) {
+          point.velocity.y = 0
+          point.y = this.svgHeight
+        }
       })
     }
 
@@ -95,8 +131,8 @@ function App() {
     this.lineRef = document.createElementNS("http://www.w3.org/2000/svg", "line")
     this.start = start
     this.end = end
-    this.length = Math.sqrt((start.x - end.x) + (start.y - end.y))
-    this.force = 0.5
+    this.length = Math.sqrt(((start.x - end.x) * (start.x - end.x)) + ((start.y - end.y) * (start.y - end.y)))
+    this.coefficient = -0.6
   }
 
   // Create Letters 
@@ -104,13 +140,16 @@ function App() {
   // const [testLetter, setTestLetter] = useState(new Letter([{ x: 25, y: 25 }, { x: 50, y: 25 }, { x: 75, y: 25 }, { x: 25, y: 50 }, { x: 50, y: 50 }, { x: 75, y: 50 }, { x: 25, y: 75 }, { x: 50, y: 75 }, { x: 75, y: 75 }], TestSVG, 25))
 
   const [fOne, setFOne] = useState(new Letter([
-    new Vertex(20, 20, 1, [2, 7, 22]),
-    new Vertex(40, 20, 2, [3, 6, 7]),
+    // new Vertex(50, 60, 0, [1]),
+    // new Vertex(50, 90, 1, [])
+    new Vertex(0, 0, 0, []),
+    new Vertex(20, 20, 1, [2, 7, 22, 15, 11]),
+    new Vertex(40, 20, 2, [3, 6, 7 , 16, 20]),
     new Vertex(60, 20, 3, [4, 5, 6]),
     new Vertex(80, 20, 4, [5]),
     new Vertex(80, 40, 5, []),
     new Vertex(60, 40, 6, [4, 5]),
-    new Vertex(40, 40, 7, [3, 6, 24]),
+    new Vertex(40, 40, 7, [3, 6, 24, 4]),
     new Vertex(40, 80, 8, [9, 10, 11]),
     new Vertex(60, 80, 9, [10]),
     new Vertex(60, 100, 10, []),
@@ -131,13 +170,14 @@ function App() {
   ], TestSVG2, 20))
 
   useEffect(() => {
-    const fps = 1000 / 30;
+    const fps = 1000 / 40;
 
     if (fOne.connections.length === 0) fOne.createConnections()
 
     const intervalId = setInterval(async () => {
       if (fOne) {
         fOne.accelerate();
+        fOne.calculateForce()
         fOne.updatePosition();
         fOne.render();
       }
