@@ -3,18 +3,21 @@ import './App.css'
 
 function App() {
 
-  const Gravity = 0.6
+  const Gravity = 0.1
 
   const TestSVG = useRef(null);
 
   const TestSVG2 = useRef(null);
 
-  function Vertex(x, y, id, connections) {
+  const TestSVG3 = useRef(null);
+
+  function Vertex(x, y, id, connections, locked = false) {
     this.id = id
     this.x = x
     this.y = y
     this.connections = connections
     this.velocity = { x: 0, y: 0 }
+    this.locked = locked
   }
 
   function Letter(points, svgRef) {
@@ -107,8 +110,10 @@ function App() {
 
     this.updatePosition = () => {
       this.points.forEach((point) => {
-        point.x += point.velocity.x
+        
         point.y += point.velocity.y
+        if (point.locked) return
+        point.x += point.velocity.x
         if (point.x > this.svgWidth) {
           point.velocity.x = 0
           point.x = this.svgWidth
@@ -142,37 +147,61 @@ function App() {
   const [fOne, setFOne] = useState(new Letter([
     // new Vertex(50, 60, 0, [1]),
     // new Vertex(50, 90, 1, [])
-    new Vertex(0, 0, 0, []),
-    new Vertex(20, 20, 1, [2, 7, 22, 15, 11]),
-    new Vertex(40, 20, 2, [3, 6, 7 , 16, 20]),
-    new Vertex(60, 20, 3, [4, 5, 6]),
-    new Vertex(80, 20, 4, [5]),
-    new Vertex(80, 40, 5, []),
-    new Vertex(60, 40, 6, [4, 5]),
-    new Vertex(40, 40, 7, [3, 6, 24, 4]),
-    new Vertex(40, 80, 8, [9, 10, 11]),
-    new Vertex(60, 80, 9, [10]),
-    new Vertex(60, 100, 10, []),
-    new Vertex(40, 100, 11, [9, 10, 12]),
-    new Vertex(40, 120, 12, [13]),
-    new Vertex(40, 140, 13, [14]),
-    new Vertex(40, 160, 14, [15]),
-    new Vertex(40, 180, 15, []),
-    new Vertex(20, 180, 16, [14, 15]),
-    new Vertex(20, 160, 17, [13, 14, 15, 16]),
-    new Vertex(20, 140, 18, [12, 13, 14, 17]),
-    new Vertex(20, 120, 19, [11, 12, 13, 18]),
-    new Vertex(20, 100, 20, [8, 11, 12, 19]),
-    new Vertex(20, 80, 21, [24, 8, 11, 20]),
-    new Vertex(20, 40, 22, [2, 7, 24, 23]),
-    new Vertex(20, 60, 23, [7, 24, 8, 21]),
-    new Vertex(40, 60, 24, [8]),
-  ], TestSVG2, 20))
+    new Vertex(0, 0, 0, [], false),
+    new Vertex(20, 20, 1, [2, 7, 22], false),
+    new Vertex(40, 20, 2, [3, 6, 7], false),
+    new Vertex(60, 20, 3, [4, 5, 6], false),
+    new Vertex(80, 20, 4, [5], false),
+    new Vertex(80, 40, 5, [], false),
+    new Vertex(60, 40, 6, [4, 5], false),
+    new Vertex(40, 40, 7, [3, 6, 24, 4], false),
+    new Vertex(40, 80, 8, [9, 10, 11], false),
+    new Vertex(60, 80, 9, [10], false),
+    new Vertex(60, 100, 10, [], false),
+    new Vertex(40, 100, 11, [9, 10, 12], false),
+    new Vertex(40, 120, 12, [13], false),
+    new Vertex(40, 140, 13, [14], false),
+    new Vertex(40, 160, 14, [15], false),
+    new Vertex(40, 180, 15, [], true),
+    new Vertex(20, 180, 16, [14, 15], true),
+    new Vertex(20, 160, 17, [13, 14, 15, 16], false),
+    new Vertex(20, 140, 18, [12, 13, 14, 17], false),
+    new Vertex(20, 120, 19, [11, 12, 13, 18], false),
+    new Vertex(20, 100, 20, [8, 11, 12, 19], false),
+    new Vertex(20, 80, 21, [24, 8, 11, 20], false),
+    new Vertex(20, 40, 22, [2, 7, 24, 23], false),
+    new Vertex(20, 60, 23, [7, 24, 8, 21], false),
+    new Vertex(40, 60, 24, [8], false),
+  ], TestSVG2))
+
+  const [fTwo, setFTwo] = useState(new Letter([
+    new Vertex(0, 0, 0, [], false),
+    new Vertex(40, 100, 1, [2,5,4], false),
+    new Vertex(60, 100, 2, [6,5], false),
+    new Vertex(20, 120, 3, [1,2,4,7,10], false),
+    new Vertex(40, 110, 4, [2,5,7], false),
+    new Vertex(60, 110, 5, [6,9,8], false),
+    new Vertex(80, 120, 6, [9], false),
+    new Vertex(40, 130, 7, [8,12,11], false),
+    new Vertex(60, 130, 8, [6,9,12], false),
+    new Vertex(80, 130, 9, [], false),
+    new Vertex(20, 140, 10, [1,7,11,13,14], false),
+    new Vertex(40, 140, 11, [8,12,13], false),
+    new Vertex(70, 140, 12, [9], false),
+    new Vertex(40, 150, 13, [15,18], false),
+    new Vertex(20, 160, 14, [11,13,15,18], false),
+    new Vertex(50, 160, 15, [16,17,19], false),
+    new Vertex(70, 160, 16, [17], false),
+    new Vertex(70, 170, 17, [], false),
+    new Vertex(40, 180, 18, [15,19], false),
+    new Vertex(60, 180, 19, [16,17], false),
+  ], TestSVG3))
 
   useEffect(() => {
     const fps = 1000 / 40;
 
     if (fOne.connections.length === 0) fOne.createConnections()
+    if (fTwo.connections.length === 0) fTwo.createConnections()
 
     const intervalId = setInterval(async () => {
       if (fOne) {
@@ -180,6 +209,12 @@ function App() {
         fOne.calculateForce()
         fOne.updatePosition();
         fOne.render();
+      }
+      if (fTwo) {
+        fTwo.accelerate();
+        fTwo.calculateForce()
+        fTwo.updatePosition();
+        fTwo.render();
       }
     }, fps);
 
@@ -204,6 +239,8 @@ function App() {
 
           </svg>
           <svg ref={TestSVG2} width="100" height="200">
+          </svg>
+          <svg ref={TestSVG3} width="100" height="200">
           </svg>
         </div>
       </header>
